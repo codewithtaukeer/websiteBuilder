@@ -1,6 +1,6 @@
 import  { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import type { Project } from '../types/project'
+import type { Project } from '../types/index.ts'
 
 import { ArrowBigDownDashIcon, EyeIcon, EyeOffIcon, FullscreenIcon, LaptopIcon, Loader2Icon, MessageSquareIcon, SaveIcon, SmartphoneIcon, TabletIcon, XIcon } from 'lucide-react'
 
@@ -78,7 +78,7 @@ const togglePublish = async () => {
     try {
         const { data } = await api.get(`/api/user/publish-toggle/${projectId}`);
         toast.success(data.message)
-        setProject((prev) => prev ? ({...prev, isPublished: !prev.isPublished}) : null)
+        setProject((prev: Project | null) => prev ? ({ ...prev, isPublished: !prev.isPublished }) : null)
     } catch (error: any) {
         toast.error(error?.response?.data?.message || error.message);
         console.log(error);
