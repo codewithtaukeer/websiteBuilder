@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import View from './pages/View'
@@ -8,7 +8,7 @@ import MyProjects from './pages/MyProjects'
 import Community from './pages/Community'
 import Preview from './pages/Preview'
 import Navbar from './components/Navbar'
-import path from 'path'
+
 import { Toaster} from 'sonner'
 import AuthPage from './pages/auth/AuthPage'
 import Settings from './pages/Settings'

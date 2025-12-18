@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { AccountSettingsCards, ChangePasswordCard, DeleteAccountCard } from "@daveyplate/better-auth-ui"
 const Settings = () => {
   return (
