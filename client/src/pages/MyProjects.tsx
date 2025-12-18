@@ -4,25 +4,53 @@ import { Loader2Icon, PlusIcon, TrashIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { dummyProjects} from '../assets/assets';
 import Footer from '../components/Footer';
+import { toast } from 'sonner';
+import api from '@/configs/axios';
+import { authClient } from '@/lib/auth-client';
 
 const MyProjects = () => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate =useNavigate();
-    const fetchProjects=async()=>{
-        setProjects(dummyProjects)
-        //simulate loading
-        setTimeout(() => {
-            setLoading(false);
-        }, 1000);
-    }
-    const deleteProject=async(projectId:string)=>{
-        setProjects(projects.filter(project=>project.id!==projectId));
-    }  
-    useEffect(()=>{
-        fetchProjects();
+    const {data:session,isPending}=authClient.useSession();
+ const fetchProjects = async () => {
+  try {
+    const { data } = await api.get('/api/user/projects')
+    setProjects(data.projects)
+    setLoading(false)
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error?.response?.data?.message || error.message)
+  }
+}
 
-    },[])
+
+
+  const deleteProject = async (projectId: string) => {
+  try {
+    const confirm = window.confirm('Are you sure you want to delete this project?');
+    if (!confirm) return;
+
+    const { data } = await api.delete(`/api/project/${projectId}`)
+    toast.success(data.message);
+    fetchProjects()
+  } catch (error: any) {
+    console.log(error);
+    toast.error(error?.response?.data?.message || error.message)
+  }
+}
+
+    
+useEffect(() => {
+  if (session?.user && !isPending) {
+    fetchProjects()
+  } else if (!isPending && !session?.user) {
+    navigate('/');
+    toast('Please login to view your projects');
+  }
+}, [session?.user])
+
+
   return (
     <>
       <div className='px-4 md:px-16 lg:px-24 xl:px-32'>
@@ -84,13 +112,15 @@ className='flex justify-between items-center mt-6'>
     Date(project.createdAt).toLocaleDateString()}
   </span>
   <div className='flex gap-3 text-white text-sm'>
-    <button onClick={() => navigate(`/preview/$
-    {project.id}`)} className='px-3 py-1.5
-    bg-white/10 hover:bg-white/15 rounded-md
-    transition-all'>Preview</button>
+    <button
+  onClick={() => navigate(`/preview/${project.id}`)}
+  className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md"
+>
+  Preview
+</button>
 
-    <button onClick={() => navigate(`/preview/$
-    {project.id}`)} className='px-3 py-1.5
+
+    <button onClick={() => navigate(`/projects/${project.id}`)} className='px-3 py-1.5
     bg-white/10 hover:bg-white/15 rounded-md
     transition-colors'>Open</button>
   </div>

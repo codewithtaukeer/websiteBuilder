@@ -2,30 +2,45 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import { dummyProjects } from '../assets/assets';
 import { Loader2Icon } from 'lucide-react';
-import type { Project } from '../types';
+import type { Project, Version } from '../types';
 import ProjectPreview from '../components/ProjectPreview';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
+import api from '@/configs/axios';
 
 const Preview = () => {
   const { projectId, versionId } = useParams();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(true);
-
+  const{data:session,isPending}=authClient.useSession();
 
   const fetchCode = async () => {
+  try {
+    const { data } = await api.get(`/api/project/preview/${projectId}`)
+    setCode(data.project.current_code)
 
-setTimeout(()=>{
+    if (versionId) {
+      data.project.versions.forEach((version: Version) => {
+        if (version.id === versionId) {
+          setCode(version.code)
+        }
+      })
+    }
 
-  const code = dummyProjects.find(project=> project.id === projectId)?.
-current_code;
-if(code){
-setCode(code);
-setLoading(false)
+    setLoading(false)
+  } catch (error: any) {
+    toast.error(error?.response?.data?.message || error.message);
+    console.log(error);
+  }
 }
-},2000)
-}
-useEffect(()=>{
-  fetchCode()
-},[])
+
+
+useEffect(() => {
+  if (!isPending && session?.user) {
+    fetchCode()
+  }
+}, [session?.user])
+
 if(loading){
 return (
 <div className='flex items-center justify-center h-screen'>
