@@ -46,7 +46,10 @@ export const createUserProject = async (req: Request, res: Response) => {
     //Create a new project
     const project =await prisma.websiteProject.create({
         data:{
-            name:initial_prompt.length()>50?initial_prompt.substring(0,47)+'...':initial_prompt,
+            name: initial_prompt.length > 50
+  ? initial_prompt.substring(0, 47) + '...'
+  : initial_prompt,
+
             initial_prompt,
             userId
 
@@ -74,7 +77,7 @@ export const createUserProject = async (req: Request, res: Response) => {
  
     res.json({projectId:project.id})
 const promptEnhanceResponse = await openai.chat.completions.create({
-      model: "z-ai/glm-4.5-air:free",
+      model: "kwaipilot/kat-coder-pro:free",
       messages: [
         {
           role: "system",
@@ -120,7 +123,7 @@ await prisma.conversation.create({
 
 //Generate Website code
 const codeGenerationResponse=await openai.chat.completions.create({
-    model: "z-ai/glm-4.5-air:free",
+    model: "kwaipilot/kat-coder-pro:free",
       messages: [
         {
             role:'system',
@@ -157,7 +160,22 @@ const codeGenerationResponse=await openai.chat.completions.create({
 })
 
 const code=codeGenerationResponse.choices[0].message.content||'';
+if(!code)
+{
+    await prisma.conversation.create({
+        data:{
+            role:'assistant',
+            content:'Unable to generate the code, please try again',
+            projectId:project.id
+        }
+    })
 
+    await prisma.user.update({
+        where:{id:userId},
+        data:{credits:{increment:5}}
+    })
+    return
+}
 
 // Create Version for the project
 const version = await prisma.version.create({
@@ -208,3 +226,101 @@ await prisma.websiteProject.update({
 }
 
 //Controller to get single user project
+
+
+export const getUserProject=async(req:Request,res:Response)=>
+{
+    try{
+    const userId=req.userId;
+    if(!userId)
+    {
+        return res.status(401).json({message:'unauthorized'})
+    }
+    const {projectId}=req.params;
+    const project = await prisma.websiteProject.findUnique({
+  where: { id: projectId, userId },
+  include: {
+    conversation: {
+      orderBy: { timestamp: 'asc' }
+    },
+    versions: { orderBy: { timestamp: 'asc' } }
+  }
+})
+
+res.json({ project })}
+
+    catch(error:any)
+    {
+        console.log(error.code||error.message)
+        res.status(500).json({message:error.message})
+    }
+    
+}
+
+
+
+export const getUserProjects=async(req:Request,res:Response)=>
+{
+    try{
+    const userId=req.userId;
+    if(!userId)
+    {
+        return res.status(401).json({message:'unauthorized'})
+    }
+    
+    const projects = await prisma.websiteProject.findMany({
+  where: { userId },
+    orderBy: { updatedAt: 'desc' }
+})
+
+res.json({ projects })}
+
+    catch(error:any)
+    {
+        console.log(error.code||error.message)
+        res.status(500).json({message:error.message})
+    }
+    
+}
+
+
+
+export const togglePublish=async(req:Request,res:Response)=>
+{
+    try{
+    const userId=req.userId;
+    if(!userId)
+    {
+        return res.status(401).json({message:'unauthorized'})
+    }
+    
+   const {projectId}=req.params;
+    const project = await prisma.websiteProject.findUnique({
+  where: { id:projectId,userId }
+})
+if(!project)
+{
+  return res.status(404).json({message:'Project not found'})
+}
+
+await prisma.websiteProject.update({
+  where: {id:projectId},
+  data:{isPublished:!project.isPublished}
+})
+res.json({ message:project.isPublished?'Project Unpublished':'Project published successfully' })
+}
+
+    catch(error:any)
+    {
+        console.log(error.code||error.message)
+        res.status(500).json({message:error.message})
+    }
+    
+}
+
+
+//To purchase credits
+
+export const purchaseCredits=async(req:Request,res:Response)=>{
+  
+}
