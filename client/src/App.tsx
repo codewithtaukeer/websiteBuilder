@@ -13,6 +13,7 @@ import { Toaster} from 'sonner'
 import AuthPage from './pages/auth/AuthPage'
 import Settings from './pages/Settings'
 
+import Loading from './pages/Loading'
 const App = () => {
 const {pathname} =useLocation()
 const hideNavbar = pathname.startsWith('/projects/') &&pathname!== '/projects'
@@ -39,6 +40,7 @@ const hideNavbar = pathname.startsWith('/projects/') &&pathname!== '/projects'
 
           <Route path="/auth/:pathname" element={<AuthPage/>} />
           <Route path="/account/settings" element={<Settings/>} />
+          <Route path="/loading" element={<Loading/>} />
            
           
 
